@@ -1,0 +1,111 @@
+/**
+ * POST /api/auth/verify-otp
+ * Body: { phone: string, code: string }
+ *
+ * 1. Verifies OTP with Twilio Verify
+ * 2. Upserts the user in the `users` table (service role — bypasses RLS)
+ * 3. Signs a JWT with the user's id + role (compatible with Supabase RLS)
+ * 4. Returns the token in both the JSON body and an HttpOnly cookie
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyOtp } from '@/lib/twilio'
+import { signJwt } from '@/lib/jwt'
+import { createClient } from '@supabase/supabase-js'
+
+// Service-role client — bypasses RLS for auth operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json().catch(() => null)
+
+    if (
+      !body ||
+      typeof body.phone !== 'string' ||
+      typeof body.code !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'phone and code are required' },
+        { status: 400 }
+      )
+    }
+
+    const phone = body.phone.trim()
+    const code = body.code.trim()
+
+    // 1. Verify OTP
+    const approved = await verifyOtp(phone, code)
+    if (!approved) {
+      return NextResponse.json(
+        { error: 'Invalid or expired OTP' },
+        { status: 401 }
+      )
+    }
+
+    // 2. Upsert user in our users table
+    //    ON CONFLICT(phone): update updated_at so we get the existing row back
+    const { data: users, error: upsertErr } = await supabaseAdmin
+      .from('users')
+      .upsert(
+        { phone, updated_at: new Date().toISOString() },
+        { onConflict: 'phone', ignoreDuplicates: false }
+      )
+      .select('id, phone, role, display_name')
+
+    if (upsertErr) {
+      console.error('[verify-otp] upsert error:', upsertErr)
+      return NextResponse.json(
+        { error: 'Failed to create user account' },
+        { status: 500 }
+      )
+    }
+
+    const user = users?.[0]
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User record not found after upsert' },
+        { status: 500 }
+      )
+    }
+
+    // 3. Sign JWT
+    const token = await signJwt({
+      sub: user.id,
+      phone: user.phone,
+      role: user.role as 'admin' | 'artist' | 'customer',
+    })
+
+    // 4. Return token in body + HttpOnly cookie
+    const response = NextResponse.json(
+      {
+        success: true,
+        token,
+        user: {
+          id: user.id,
+          phone: user.phone,
+          role: user.role,
+          display_name: user.display_name,
+        },
+      },
+      { status: 200 }
+    )
+
+    response.cookies.set('salon_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    })
+
+    return response
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Verification failed'
+    console.error('[verify-otp]', message)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
