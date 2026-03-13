@@ -8,6 +8,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { sendOtp } from '@/lib/twilio'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 // Normalize UK phone numbers to E.164
 function normalizePhone(raw: string): string {
@@ -30,6 +32,17 @@ function isValidPhone(phone: string): boolean {
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 5 OTP requests per minute per IP
+    const ip = getClientIp(req)
+    const rl = rateLimit(ip, { limit: 5, windowSec: 60 })
+    if (!rl.ok) {
+      logger.warn('Rate limit exceeded on login-sms', { ip })
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
     const body = await req.json().catch(() => null)
 
     if (!body || typeof body.phone !== 'string') {
@@ -50,8 +63,9 @@ export async function POST(req: NextRequest) {
 
     await sendOtp(phone)
 
+    logger.info('OTP sent', { phone: 'REDACTED' })
     return NextResponse.json(
-      { success: true, message: 'OTP sent', phone },
+      { success: true, message: 'OTP sent' },
       { status: 200 }
     )
   } catch (err: unknown) {

@@ -4,7 +4,7 @@ import { verifyJwt, extractToken } from '@/lib/jwt'
 // -------------------------------------------------------------------
 // Public paths that bypass all auth checks
 // -------------------------------------------------------------------
-const PUBLIC_EXACT = new Set(['/', '/login', '/artists', '/services', '/products', '/gift-cards', '/contact', '/terms'])
+const PUBLIC_EXACT = new Set(['/', '/login', '/artists', '/services', '/products', '/gift-cards', '/contact', '/terms', '/privacy'])
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT.has(pathname)) return true

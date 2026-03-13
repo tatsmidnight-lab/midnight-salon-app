@@ -12,6 +12,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
 import { signJwt } from '@/lib/jwt'
 import { createClient } from '@supabase/supabase-js'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,6 +22,17 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 5 admin login attempts per minute per IP
+    const ip = getClientIp(req)
+    const rl = rateLimit(ip, { limit: 5, windowSec: 60 })
+    if (!rl.ok) {
+      logger.warn('Rate limit exceeded on admin-login', { ip })
+      return NextResponse.json(
+        { error: 'Too many attempts. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
     const body = await req.json().catch(() => null)
 
     if (

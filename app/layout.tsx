@@ -112,6 +112,16 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <main>{children}</main>
+          <footer className="border-t border-white/10 py-8 px-6 text-center text-xs text-white/40">
+            <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p>&copy; {new Date().getFullYear()} Midnight Studio, Glasgow</p>
+              <div className="flex gap-4">
+                <a href="/terms" className="hover:text-white/70 transition-colors">Terms of Service</a>
+                <a href="/privacy" className="hover:text-white/70 transition-colors">Privacy Policy</a>
+                <a href="/contact" className="hover:text-white/70 transition-colors">Contact</a>
+              </div>
+            </div>
+          </footer>
         </Providers>
       </body>
     </html>

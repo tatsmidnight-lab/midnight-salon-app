@@ -12,6 +12,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyOtp } from '@/lib/twilio'
 import { signJwt } from '@/lib/jwt'
 import { createClient } from '@supabase/supabase-js'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 // Service-role client — bypasses RLS for auth operations
 const supabaseAdmin = createClient(
@@ -29,6 +31,17 @@ function normalizePhone(raw: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 10 OTP verify attempts per minute per IP
+    const ip = getClientIp(req)
+    const rl = rateLimit(ip, { limit: 10, windowSec: 60 })
+    if (!rl.ok) {
+      logger.warn('Rate limit exceeded on verify-otp', { ip })
+      return NextResponse.json(
+        { error: 'Too many attempts. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
     const body = await req.json().catch(() => null)
 
     if (
