@@ -11,35 +11,38 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://midnight.studio"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://midnightt.top"),
   title: {
-    default: "Midnight — Tattoo, Piercing & Eyelash Studio | Glasgow, Scotland",
-    template: "%s — Midnight Studio Glasgow",
+    default: "MidNight Tattoo & Piercing | Camden Town, London",
+    template: "%s — MidNight Tattoo & Piercing",
   },
   description:
-    "Premium tattoo, body piercing, eyelash extensions and micropigmentation studio in Glasgow, Scotland. Custom tattoos, fine line, full sleeve, nose piercing, septum, lash lifts, lip blush, microblading. Book online today.",
+    "Premium tattoo and piercing studio in Camden Town, London. Custom tattoos, fine line, realism, blackwork, full sleeves, portraits, ear piercings, facial piercings, body piercings. 13+ years experience. Book online at midnightt.top.",
   keywords: [
-    "tattoo Glasgow",
-    "piercing Glasgow",
-    "eyelash extensions Glasgow",
-    "custom tattoo Scotland",
+    "tattoo Camden",
+    "tattoo London",
+    "piercing Camden",
+    "piercing London",
+    "custom tattoo London",
     "fine line tattoo",
+    "realism tattoo",
+    "blackwork tattoo",
     "full sleeve tattoo",
+    "portrait tattoo",
     "nose piercing",
     "septum piercing",
-    "lobe piercing",
-    "eyelash lift",
-    "micropigmentation Glasgow",
-    "lip blush",
-    "microblading",
-    "body art Glasgow",
+    "ear piercing London",
+    "helix piercing",
+    "tragus piercing",
+    "body piercing Camden",
     "tattoo studio near me",
-    "best tattoo artist Glasgow",
+    "best tattoo artist London",
     "tattoo aftercare",
     "piercing aftercare",
     "tattoo booking online",
-    "midnight studio",
     "midnight tattoo",
+    "midnightt.top",
+    "Camden High Street tattoo",
   ],
   icons: {
     icon: "/logo.jpg",
@@ -48,15 +51,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_GB",
-    siteName: "Midnight Studio",
-    title: "Midnight — Tattoo, Piercing & Eyelash Studio | Glasgow",
-    description: "Premium tattoo, piercing and eyelash studio in Glasgow. Custom designs, professional piercings, stunning lash extensions. Book your appointment online.",
-    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "Midnight Studio Glasgow" }],
+    siteName: "MidNight Tattoo & Piercing",
+    title: "MidNight Tattoo & Piercing | Camden Town, London",
+    description: "Premium tattoo and piercing studio in Camden Town, London. Custom designs, realism, fine line, blackwork, professional piercings. 13+ years experience. Book online.",
+    images: [{ url: "/logo.jpg", width: 512, height: 512, alt: "MidNight Tattoo & Piercing Camden" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Midnight — Tattoo, Piercing & Eyelash | Glasgow",
-    description: "Premium tattoo, piercing and eyelash studio in Glasgow, Scotland. Book online today.",
+    title: "MidNight Tattoo & Piercing | Camden, London",
+    description: "Premium tattoo and piercing studio in Camden Town, London. Custom designs, 13+ years experience. Book online.",
     images: ["/logo.jpg"],
   },
   robots: {
@@ -87,15 +90,21 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "TattooParlor",
-              name: "Midnight Studio",
-              description: "Premium tattoo, piercing and eyelash studio in Glasgow, Scotland.",
-              address: { "@type": "PostalAddress", addressLocality: "Glasgow", addressCountry: "GB" },
+              name: "MidNight Tattoo & Piercing",
+              description: "Premium tattoo and piercing studio in Camden Town, London. Custom designs, realism, fine line, blackwork. 13+ years experience.",
+              url: "https://midnightt.top",
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: "Unit 12, 190 Camden High Street",
+                addressLocality: "London",
+                postalCode: "NW1 8QP",
+                addressCountry: "GB",
+              },
               telephone: "+447958747929",
               openingHours: "Mo-Su 11:00-23:00",
               priceRange: "££",
               image: "/logo.jpg",
-              sameAs: ["https://www.instagram.com/midnight.tats/", "https://www.tiktok.com/@midnight.tats"],
-              aggregateRating: { "@type": "AggregateRating", ratingValue: "5", reviewCount: "127" },
+              sameAs: ["https://www.instagram.com/midnight.tats/", "https://www.instagram.com/kingzz.uk/"],
               hasOfferCatalog: {
                 "@type": "OfferCatalog",
                 name: "Services",
@@ -114,7 +123,7 @@ export default function RootLayout({
           <main>{children}</main>
           <footer className="border-t border-white/10 py-8 px-6 text-center text-xs text-white/40">
             <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p>&copy; {new Date().getFullYear()} Midnight Studio, Glasgow</p>
+              <p>&copy; {new Date().getFullYear()} MidNight Tattoo &amp; Piercing, Camden Town, London</p>
               <div className="flex gap-4">
                 <a href="/terms" className="hover:text-white/70 transition-colors">Terms of Service</a>
                 <a href="/privacy" className="hover:text-white/70 transition-colors">Privacy Policy</a>
