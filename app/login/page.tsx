@@ -16,17 +16,26 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [agreedTerms, setAgreedTerms] = useState(false)
 
+  // Normalize UK numbers: 07xxx → +447xxx
+  const normalizePhone = (raw: string) => {
+    let p = raw.replace(/[\s\-().]/g, "")
+    if (/^0[1-9]\d{8,10}$/.test(p)) p = "+44" + p.slice(1)
+    if (/^44[1-9]\d{8,10}$/.test(p)) p = "+" + p
+    return p
+  }
+
   const sendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!phone) return
     setLoading(true)
     setError(null)
 
+    const normalized = normalizePhone(phone)
     try {
       const res = await fetch("/api/auth/login-sms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone: normalized }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to send code")
@@ -48,7 +57,7 @@ function LoginForm() {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, code: otp }),
+        body: JSON.stringify({ phone: normalizePhone(phone), code: otp }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Invalid code")

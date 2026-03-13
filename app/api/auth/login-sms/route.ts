@@ -9,6 +9,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendOtp } from '@/lib/twilio'
 
+// Normalize UK phone numbers to E.164
+function normalizePhone(raw: string): string {
+  let phone = raw.replace(/[\s\-().]/g, '')
+  // UK local: 07xxx → +447xxx
+  if (/^0[1-9]\d{8,10}$/.test(phone)) {
+    phone = '+44' + phone.slice(1)
+  }
+  // Missing +: 447xxx → +447xxx
+  if (/^44[1-9]\d{8,10}$/.test(phone)) {
+    phone = '+' + phone
+  }
+  return phone
+}
+
 // Loose E.164 check: starts with +, 7–15 digits
 function isValidPhone(phone: string): boolean {
   return /^\+[1-9]\d{6,14}$/.test(phone)
@@ -25,7 +39,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const phone = body.phone.trim()
+    const phone = normalizePhone(body.phone.trim())
 
     if (!isValidPhone(phone)) {
       return NextResponse.json(

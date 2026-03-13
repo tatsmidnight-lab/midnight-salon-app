@@ -19,6 +19,14 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// Normalize UK phone numbers to E.164
+function normalizePhone(raw: string): string {
+  let phone = raw.replace(/[\s\-().]/g, '')
+  if (/^0[1-9]\d{8,10}$/.test(phone)) phone = '+44' + phone.slice(1)
+  if (/^44[1-9]\d{8,10}$/.test(phone)) phone = '+' + phone
+  return phone
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null)
@@ -34,7 +42,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const phone = body.phone.trim()
+    const phone = normalizePhone(body.phone.trim())
     const code = body.code.trim()
 
     // 1. Verify OTP

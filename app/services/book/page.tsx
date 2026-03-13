@@ -76,9 +76,8 @@ function BookingFlow() {
         body: JSON.stringify({
           service_id: service.id,
           artist_id: service.artist_id,
-          customer_id: user.id,
-          date: selectedDate,
-          time: selectedTime,
+          booking_date: selectedDate,
+          booking_time: selectedTime,
         }),
       })
 

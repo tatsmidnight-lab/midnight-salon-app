@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
   }
 
   // --- Parse body ---
-  let body: { items?: unknown; shipping_address?: unknown; notes?: unknown }
+  let body: { items?: unknown; shipping_address?: unknown; notes?: unknown; coupon_code?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -214,17 +214,55 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // --- Apply coupon if provided ---
+    let discountAmount = 0
+    let couponCode: string | null = null
+
+    if (typeof body.coupon_code === 'string' && body.coupon_code.trim()) {
+      couponCode = body.coupon_code.trim().toUpperCase()
+
+      const { data: coupon } = await supabaseAdmin
+        .from('coupons')
+        .select('*')
+        .eq('code', couponCode)
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (coupon) {
+        const notExpired = !coupon.expires_at || new Date(coupon.expires_at) > new Date()
+        const hasUses = coupon.max_uses === null || coupon.used_count < coupon.max_uses
+        const meetsMin = totalPrice >= coupon.min_order_total
+
+        if (notExpired && hasUses && meetsMin) {
+          if (coupon.discount_type === 'percentage') {
+            discountAmount = Math.round((totalPrice * coupon.discount_value / 100) * 100) / 100
+          } else {
+            discountAmount = Math.min(coupon.discount_value, totalPrice)
+          }
+          // Increment used_count
+          await supabaseAdmin
+            .from('coupons')
+            .update({ used_count: coupon.used_count + 1 })
+            .eq('id', coupon.id)
+        }
+      }
+    }
+
+    const finalPrice = Math.max(0, Math.round((totalPrice - discountAmount) * 100) / 100)
+
     // --- Insert order ---
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
         customer_id: user.sub,
         order_date: new Date().toISOString(),
-        total_price: totalPrice,
+        total_price: finalPrice,
         status: 'pending',
         items_json: itemsSnapshot,
         shipping_address: body.shipping_address ?? null,
         notes: typeof body.notes === 'string' ? body.notes : null,
+        coupon_code: couponCode,
+        discount_amount: discountAmount,
       })
       .select()
       .single()
