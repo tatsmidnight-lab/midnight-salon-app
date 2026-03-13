@@ -209,14 +209,25 @@ export default function ServiceDetailPage() {
           AI Image Generator
         </h2>
         <div className="space-y-3">
-          <textarea
-            value={adminFocus}
-            onChange={(e) => setAdminFocus(e.target.value)}
-            placeholder="Admin focus: Describe the mood, style, or specific elements you want in the image... (e.g. 'Dark moody lighting, close-up of tattoo machine on skin, neon red accents')"
-            rows={3}
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
-            style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }}
-          />
+          <div className="relative">
+            <textarea
+              value={adminFocus}
+              onChange={(e) => setAdminFocus(e.target.value)}
+              placeholder="Admin focus: Describe the mood, style, or specific elements you want in the image... (e.g. 'Dark moody lighting, close-up of tattoo machine on skin, neon red accents')"
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none font-mono"
+              style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }}
+            />
+            <button
+              onClick={() => { setAdminFocus("Dark moody lighting, close-up of tattoo machine on skin, neon red accents, Midnight Studio brand aesthetic, professional studio photography"); showToast("Example loaded") }}
+              className="absolute top-2 right-2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold flex items-center gap-1 transition-all hover:opacity-80"
+              style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", color: "var(--accent-hex)" }}
+              title="Load example prompt"
+            >
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V3h8"/></svg>
+              Use Example
+            </button>
+          </div>
           <button onClick={generateImage} disabled={generatingImage} className="btn-primary text-sm disabled:opacity-50 flex items-center gap-2">
             {generatingImage ? (
               <>
@@ -245,14 +256,25 @@ export default function ServiceDetailPage() {
           Marketing Poster Generator
         </h2>
         <div className="space-y-3">
-          <textarea
-            value={posterFocus}
-            onChange={(e) => setPosterFocus(e.target.value)}
-            placeholder="Focus for marketing copy: promotional angle, target audience, special offers... (e.g. 'Summer flash sale, 20% off, appeal to first-timers')"
-            rows={3}
-            className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
-            style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }}
-          />
+          <div className="relative">
+            <textarea
+              value={posterFocus}
+              onChange={(e) => setPosterFocus(e.target.value)}
+              placeholder="Focus for marketing copy: promotional angle, target audience, special offers... (e.g. 'Summer flash sale, 20% off, appeal to first-timers')"
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none font-mono"
+              style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }}
+            />
+            <button
+              onClick={() => { setPosterFocus("Summer flash sale, 20% off for first-timers, dark moody aesthetic, Midnight Studio brand, include price and booking CTA, Instagram Stories format"); showToast("Example loaded") }}
+              className="absolute top-2 right-2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold flex items-center gap-1 transition-all hover:opacity-80"
+              style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", color: "var(--accent-hex)" }}
+              title="Load example prompt"
+            >
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V3h8"/></svg>
+              Use Example
+            </button>
+          </div>
           <div className="flex items-center gap-3">
             <select value={posterCount} onChange={(e) => setPosterCount(e.target.value)} className="px-4 py-2.5 rounded-xl text-sm outline-none" style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }}>
               <option value="3">3 suggestions</option>

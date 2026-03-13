@@ -10,8 +10,19 @@
  */
 
 import { createClient } from "@supabase/supabase-js"
-import { config } from "dotenv"
-config({ path: ".env.local" })
+import { readFileSync } from "fs"
+
+// Load .env.local manually (no dotenv dependency)
+const envFile = readFileSync(".env.local", "utf-8")
+envFile.split("\n").forEach(line => {
+  const trimmed = line.trim()
+  if (!trimmed || trimmed.startsWith("#")) return
+  const eqIdx = trimmed.indexOf("=")
+  if (eqIdx === -1) return
+  const key = trimmed.slice(0, eqIdx)
+  const val = trimmed.slice(eqIdx + 1)
+  if (!process.env[key]) process.env[key] = val
+})
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,

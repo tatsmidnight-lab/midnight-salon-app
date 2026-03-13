@@ -31,6 +31,8 @@ export default function AdminServicesPage() {
   const [bulkCount, setBulkCount] = useState("5")
   const [bulkStyle, setBulkStyle] = useState("")
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkResults, setBulkResults] = useState<any[] | null>(null)
+  const [bulkCopied, setBulkCopied] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -110,9 +112,19 @@ export default function AdminServicesPage() {
     setSelectedServices(new Set())
   }
 
+  const BULK_PROMPT_EXAMPLE = `Suggest 5 new piercing services for Midnight Studio. Include:
+- Service name
+- Description (1-2 sentences)
+- Base price in GBP
+- Duration in minutes
+- Category: Tattoo, Piercing, Eyelash, Micropigmentation, or Course
+
+Focus on trendy, in-demand piercings that complement our existing range.`
+
   const handleBulkCreate = async () => {
     if (!bulkText.trim()) return
     setBulkLoading(true)
+    setBulkResults(null)
     try {
       const res = await fetch("/api/services/admin-bulk-create-services", {
         method: "POST",
@@ -126,12 +138,31 @@ export default function AdminServicesPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        if (data.services) setServices((prev) => [...prev, ...data.services])
-        setBulkText("")
-        setShowBulk(false)
-        showToast(`${data.services?.length || 0} services created`)
+        if (data.services && data.services.length > 0) {
+          setBulkResults(data.services)
+          setServices((prev) => [...prev, ...data.services])
+          showToast(`${data.services.length} services created`)
+        } else if (data.suggestions) {
+          setBulkResults(data.suggestions)
+          showToast(`${data.suggestions.length} suggestions ready — review and add`)
+        }
       }
     } catch {} finally { setBulkLoading(false) }
+  }
+
+  const copyBulkResultsJson = () => {
+    if (!bulkResults) return
+    const json = JSON.stringify(bulkResults.map((s: any) => ({
+      name: s.name,
+      description: s.description || "",
+      base_price: s.base_price || s.price || 0,
+      duration: s.duration || 30,
+      category: s.category_name || s.category || "",
+    })), null, 2)
+    navigator.clipboard.writeText(json)
+    setBulkCopied(true)
+    setTimeout(() => setBulkCopied(false), 2000)
+    showToast("JSON copied")
   }
 
   const getCatName = (catId: string) => categories.find((c) => c.id === catId)?.name || "—"
@@ -196,10 +227,13 @@ export default function AdminServicesPage() {
       {/* Bulk AI Create Panel */}
       {showBulk && (
         <div className="card-glass p-6 mb-6 animate-page-enter" style={{ borderColor: "var(--accent-hex)", borderWidth: "1px" }}>
-          <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: "hsl(var(--text-primary))" }}>
+          <h3 className="font-bold mb-3 flex items-center gap-2" style={{ color: "hsl(var(--text-primary))" }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--accent-hex)" strokeWidth="1.5" strokeLinecap="round"><circle cx="8" cy="8" r="6"/><path d="M6 8h4M8 6v4"/></svg>
-            Bulk AI Service Creator
+            AI Service Suggestions
           </h3>
+          <p className="text-xs mb-3" style={{ color: "hsl(var(--text-muted))" }}>
+            Describe what services you want and AI will generate a list. You can add them directly or copy the JSON.
+          </p>
           <div className="grid sm:grid-cols-3 gap-3 mb-3">
             <select value={bulkCategory} onChange={(e) => setBulkCategory(e.target.value)} className="px-4 py-2.5 rounded-xl text-sm outline-none" style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }}>
               <option value="">Any category</option>
@@ -208,13 +242,66 @@ export default function AdminServicesPage() {
             <input type="number" value={bulkCount} onChange={(e) => setBulkCount(e.target.value)} placeholder="Count" min={1} max={20} className="px-4 py-2.5 rounded-xl text-sm outline-none" style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }} />
             <input value={bulkStyle} onChange={(e) => setBulkStyle(e.target.value)} placeholder="Style (e.g. Japanese, Minimalist)" className="px-4 py-2.5 rounded-xl text-sm outline-none" style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }} />
           </div>
-          <textarea value={bulkText} onChange={(e) => setBulkText(e.target.value)} placeholder="Describe the services you want to create... e.g. 'Traditional Japanese half sleeve with koi fish and waves, including consultation and aftercare'" rows={3} className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none mb-3" style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }} />
-          <div className="flex gap-2">
-            <button onClick={handleBulkCreate} disabled={bulkLoading || !bulkText.trim()} className="btn-primary text-sm disabled:opacity-50">
-              {bulkLoading ? "Generating..." : "Generate with AI"}
+
+          {/* Textarea with copy example button */}
+          <div className="relative mb-3">
+            <textarea
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              placeholder={BULK_PROMPT_EXAMPLE}
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none font-mono"
+              style={{ background: "var(--surface-2-hex)", color: "hsl(var(--text-primary))", border: "1px solid var(--glass-border)" }}
+            />
+            <button
+              onClick={() => { setBulkText(BULK_PROMPT_EXAMPLE); showToast("Example prompt loaded") }}
+              className="absolute top-2 right-2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold flex items-center gap-1 transition-all hover:opacity-80"
+              style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", color: "var(--accent-hex)" }}
+              title="Load example prompt"
+            >
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V3h8"/></svg>
+              Use Example
             </button>
-            <button onClick={() => setShowBulk(false)} className="btn-secondary text-sm">Cancel</button>
           </div>
+
+          <div className="flex gap-2 mb-4">
+            <button onClick={handleBulkCreate} disabled={bulkLoading || !bulkText.trim()} className="btn-primary text-sm disabled:opacity-50 flex items-center gap-2">
+              {bulkLoading ? (<><svg className="w-4 h-4 animate-spin" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="8" cy="8" r="6" strokeDasharray="30" strokeDashoffset="10"/></svg>Generating...</>) : "Generate with AI"}
+            </button>
+            <button onClick={() => { setShowBulk(false); setBulkResults(null) }} className="btn-secondary text-sm">Cancel</button>
+          </div>
+
+          {/* AI Results with copy/add buttons */}
+          {bulkResults && bulkResults.length > 0 && (
+            <div className="animate-fade-in">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold" style={{ color: "hsl(var(--text-primary))" }}>{bulkResults.length} services suggested:</p>
+                <button
+                  onClick={copyBulkResultsJson}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+                  style={{ background: bulkCopied ? "rgba(34,197,94,0.15)" : "var(--glass-bg)", border: `1px solid ${bulkCopied ? "rgba(34,197,94,0.3)" : "var(--glass-border)"}`, color: bulkCopied ? "#22c55e" : "hsl(var(--text-secondary))" }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V3h8"/></svg>
+                  {bulkCopied ? "Copied!" : "Copy JSON"}
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-60 overflow-y-auto rounded-xl p-3" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}>
+                {bulkResults.map((item: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: "var(--surface-2-hex)" }}>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-semibold block truncate" style={{ color: "hsl(var(--text-primary))" }}>{item.name}</span>
+                      {item.description && <span className="text-[10px] block truncate" style={{ color: "hsl(var(--text-muted))" }}>{item.description}</span>}
+                    </div>
+                    <div className="flex items-center gap-3 ml-3">
+                      <span className="text-xs" style={{ color: "hsl(var(--text-muted))" }}>{item.duration || 30}min</span>
+                      <span className="text-xs font-bold" style={{ color: "var(--accent-hex)" }}>&pound;{item.base_price || item.price || 0}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "validate": "npx tsx cli/midnight-validate.mjs full",
+    "validate:frontend": "npx tsx cli/midnight-validate.mjs frontend",
+    "validate:backend": "npx tsx cli/midnight-validate.mjs backend",
+    "validate:e2e": "npx tsx cli/midnight-validate.mjs e2e",
+    "validate:report": "npx tsx cli/midnight-validate.mjs report",
+    "seed": "node scripts/seed-data.mjs",
+    "check-data": "node scripts/check-data.mjs",
+    "test:full": "node scripts/full-test.mjs"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.20",

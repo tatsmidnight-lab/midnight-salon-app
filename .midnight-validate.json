@@ -1,0 +1,38 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "timeout": 10000,
+  "thresholds": {
+    "responseTime": {
+      "warn": 3000,
+      "fail": 10000
+    }
+  },
+  "pages": {
+    "public": [
+      "/", "/services", "/products", "/gift-cards",
+      "/contact", "/terms", "/login", "/artists", "/book"
+    ],
+    "admin": [
+      "/dash-admin", "/dash-admin/users", "/dash-admin/services",
+      "/dash-admin/products", "/dash-admin/orders",
+      "/dash-admin/packages", "/dash-admin/bulk-sms"
+    ],
+    "artist": [
+      "/artist", "/artist/calendar", "/artist/services",
+      "/artist/orders", "/artist/messages"
+    ],
+    "customer": [
+      "/customer/bookings", "/customer/orders",
+      "/customer/profile", "/customer/shop", "/customer/cart"
+    ]
+  },
+  "adminCredentials": {
+    "username": "admin",
+    "password": "midnight2024"
+  },
+  "expectedData": {
+    "categories": ["Tattoo", "Piercing", "Eyelash", "Micropigmentation", "Course"],
+    "serviceCount": 29,
+    "productCount": 14
+  }
+}
